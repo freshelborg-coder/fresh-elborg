@@ -1,1 +1,2 @@
-module.exports={reactStrictMode:true,compress:true,images:{formats:["image/avif","image/webp"]},poweredByHeader:false};
+// Static export: deploys to Cloudflare Pages (build output goes to /out)
+module.exports={output:"export",trailingSlash:true,reactStrictMode:true,poweredByHeader:false,images:{unoptimized:true}};
