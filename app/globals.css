@@ -3,3 +3,11 @@
 body{@apply bg-paper text-ink antialiased pb-20 md:pb-0}
 .btn{@apply rounded-xl bg-brand px-4 py-2 font-bold text-white transition active:scale-95 hover:bg-brand-dark}
 .card{@apply rounded-2xl bg-white shadow-sm ring-1 ring-black/5}
+
+@keyframes mq-l{to{transform:translateX(-50%)}}
+@keyframes mq-r{to{transform:translateX(50%)}}
+.mq{overflow:hidden}
+.mq-track{display:flex;width:max-content;animation:mq-l var(--d,30s) linear infinite}
+[dir=rtl] .mq-track{animation-name:mq-r}
+.mq:hover .mq-track,.mq:active .mq-track{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.mq-track{animation:none}.mq{overflow-x:auto}}
