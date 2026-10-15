@@ -1,8 +1,11 @@
 "use client";
-import {useState} from "react";
+import {useState,useRef,useEffect} from "react";
 import {useApp} from "@/lib/store";
-function Pic({p}){const [bad,setBad]=useState(false);
-  return bad||!p.img?<span className="text-6xl">{p.e}</span>:<img src={p.img} alt={p.name.ar} loading="lazy" decoding="async" onError={()=>setBad(true)} className="h-full w-full object-cover"/>}
+// If the photo is missing we show the emoji. The effect also catches images that already failed
+// before React attached onError (which showed a broken-image icon).
+function Pic({p}){const [bad,setBad]=useState(false);const ref=useRef(null);
+  useEffect(()=>{const i=ref.current;if(i&&i.complete&&i.naturalWidth===0)setBad(true);},[]);
+  return bad||!p.img?<span className="text-6xl">{p.e}</span>:<img ref={ref} src={p.img} alt={p.name.ar} loading="lazy" decoding="async" onError={()=>setBad(true)} className="h-full w-full object-cover"/>}
 export default function ProductCard({p,rank,sm}){
   const {t,lang,add}=useApp();
   return(<article className="card relative flex h-full flex-col overflow-hidden rounded-3xl">
