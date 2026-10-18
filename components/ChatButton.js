@@ -21,7 +21,7 @@ export default function ChatButton(){
   const wa=`https://wa.me/${PAY.whatsapp}?text=${encodeURIComponent(msg)}`;
   return(<>
     {open&&<div onClick={()=>setOpen(false)} className="fixed inset-0 z-20 bg-black/35"/>}
-    {open&&<div role="dialog" aria-label={t("brand")} className="fixed inset-x-4 bottom-44 z-30 mx-auto max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl md:inset-x-auto md:bottom-24 md:start-4 md:w-80">
+    {open&&<div role="dialog" aria-label={t("brand")} className="fixed inset-x-4 bottom-44 z-30 mx-auto max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl md:inset-x-auto md:bottom-24 md:end-4 md:w-80">
       <div className="flex items-center gap-3 bg-brand p-4 text-white">
         <img src="/icons/icon-192.png" alt="" width="48" height="48" className="h-12 w-12 shrink-0 rounded-full ring-4 ring-white/30"/>
         <div className="min-w-0 flex-1"><div className="text-lg font-extrabold leading-tight">{t("brand")}</div>
@@ -42,7 +42,7 @@ export default function ChatButton(){
         </div>
       </div>
     </div>}
-    <button onClick={()=>setOpen(!open)} aria-label="chat" aria-expanded={open} className="fixed bottom-24 start-4 z-30 grid h-14 w-14 place-items-center rounded-full bg-brand text-white shadow-lg ring-4 ring-white/70 active:scale-95 md:bottom-6">
+    <button onClick={()=>setOpen(!open)} aria-label="chat" aria-expanded={open} className="fixed bottom-24 end-4 z-30 grid h-14 w-14 place-items-center rounded-full bg-brand text-white shadow-lg ring-4 ring-white/70 active:scale-95 md:bottom-6">
       {!open&&<span className="pointer-events-none absolute -inset-2 animate-ping rounded-full bg-brand/20" style={{animationDuration:"2.4s"}}/>}
       <span className="relative text-2xl leading-none">{open?"×":<MessageIcon/>}</span></button></>);
 }
