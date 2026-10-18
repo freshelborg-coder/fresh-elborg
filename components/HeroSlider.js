@@ -31,6 +31,7 @@ export default function HeroSlider(){
               <div className="relative flex-1">
                 <img src="/banners/banner-1-photo.jpg" alt="" decoding="async" className="h-full w-full object-cover" style={{objectPosition:"78% 50%"}}/>
                 <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#b9692a] to-transparent"/>
+                <div className="absolute right-2 top-2 rounded-xl bg-[#f7eedc] px-2 py-1 shadow"><img src="/banners/brand-logo.png" alt="فريش البرج" className="h-7 w-auto"/></div>
               </div>
             </div>
           </>
