@@ -44,7 +44,7 @@ export default function SideMenu(){
         <a href={PAY.channel} target="_blank" rel="noopener noreferrer" className={ROW}><span className={TILE}><WhatsAppIcon size={24} color="#25D366"/></span>{t("wch")}</a>
       </div>
       <div className="space-y-1 border-t p-3 pb-6">
-        <button onClick={share} className={ROW}><span className={TILE}><ShareIcon size={22} color="#12508F"/></span>{t("share")}</button>
+        <button onClick={share} className={ROW}><span className={TILE}><ShareIcon size={22} color="#B5472F"/></span>{t("share")}</button>
         <button onClick={rate} className={ROW}><span className={TILE}><StarIcon size={24} color="#F2B01E"/></span>{t("rate")}</button>
       </div>
     </aside>

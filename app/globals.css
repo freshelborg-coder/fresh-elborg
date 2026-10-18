@@ -15,10 +15,10 @@ body{@apply bg-paper text-ink antialiased pb-20 md:pb-0}
 /* ---------- Launch / splash screen ---------- */
 .splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:space-between;overflow:hidden;
   padding:max(env(safe-area-inset-top),28px) 24px max(env(safe-area-inset-bottom),28px);
-  background:linear-gradient(180deg,#0b2d5a 0%,#0a2750 48%,#031a3c 100%);color:#fff;transition:opacity .6s ease,transform .6s ease}
+  background:linear-gradient(180deg,#8f3622 0%,#6e2718 48%,#3d140b 100%);color:#fff;transition:opacity .6s ease,transform .6s ease}
 .splash-out{opacity:0;transform:scale(1.04);pointer-events:none}
 .splash-glow{position:absolute;top:6%;left:50%;width:120%;aspect-ratio:1;transform:translateX(-50%);
-  background:radial-gradient(circle,rgba(30,90,150,.55) 0%,rgba(14,48,81,.25) 38%,transparent 68%);pointer-events:none}
+  background:radial-gradient(circle,rgba(230,150,90,.38) 0%,rgba(150,60,36,.22) 38%,transparent 68%);pointer-events:none}
 .splash-top{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:4vh}
 .splash-logo{width:min(46vw,190px);height:auto;animation:sp-pop .9s cubic-bezier(.2,.8,.2,1) both}
 .splash-ar{margin-top:6px;font-size:clamp(2rem,10vw,2.8rem);font-weight:800;line-height:1.2;
@@ -29,10 +29,12 @@ body{@apply bg-paper text-ink antialiased pb-20 md:pb-0}
 .splash-tag span{display:block;width:28px;height:1px;background:rgba(217,183,122,.6)}
 .splash-basket{position:relative;width:min(82vw,360px);height:auto;margin:auto 0;animation:sp-rise 1s .5s cubic-bezier(.2,.8,.2,1) both}
 .splash-load{position:relative;display:flex;align-items:center;gap:12px;font-size:.9rem;color:rgba(255,255,255,.8);animation:sp-up .8s .8s ease both}
-.splash-ring{width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.18);border-top-color:#f2b01e;animation:sp-spin .9s linear infinite}
+.splash-ring{width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.18);border-top-color:#E0B15A;animation:sp-spin .9s linear infinite}
 @keyframes sp-pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
 @keyframes sp-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes sp-rise{from{opacity:0;transform:translateY(40px) scale(.94)}to{opacity:1;transform:none}}
 @keyframes sp-spin{to{transform:rotate(360deg)}}
 @media (max-height:640px){.splash-basket{width:min(60vw,260px)}.splash-logo{width:min(34vw,140px)}}
 @media (prefers-reduced-motion:reduce){.splash *{animation:none!important}.splash{transition:opacity .2s}}
+
+.splash-basket{filter:drop-shadow(0 18px 22px rgba(0,0,0,.38))}

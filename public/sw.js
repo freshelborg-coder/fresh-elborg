@@ -1,6 +1,6 @@
 // Minimal service worker: required by Chrome for the "Install app" prompt.
 // Network-first for pages, cache fallback so the app opens offline.
-const CACHE = "fresh-alburj-v1";
+const CACHE = "fresh-alburj-v2";
 const SHELL = ["/", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {

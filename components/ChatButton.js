@@ -4,7 +4,7 @@ import {useApp} from "@/lib/store";
 import {PAY} from "@/lib/payments";
 import {WhatsAppIcon,FacebookIcon} from "./Icons";
 // Floating "message" button. Opens a chat-style card with WhatsApp (store phone number) and Facebook.
-const PLUS="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M14 10v8M10 14h8' stroke='%23d3dbe6' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")";
+const PLUS="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M14 10v8M10 14h8' stroke='%23e4d6c4' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")";
 function MessageIcon({size=28}){
   return(<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M12 3.2a8.6 8.6 0 1 1-4.1 16.2L3.4 20.8l1.3-4.2A8.6 8.6 0 0 1 12 3.2Z"/></svg>);
@@ -28,7 +28,7 @@ export default function ChatButton(){
           <div className="flex items-center gap-1.5 text-sm text-white/85"><span className="h-2 w-2 rounded-full bg-[#4ade80]"/>{t("chatSub")}</div></div>
         <button onClick={()=>setOpen(false)} aria-label="close" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/20 text-xl leading-none">×</button>
       </div>
-      <div className="flex items-end gap-2 bg-[#eef2f7] p-4" style={{backgroundImage:PLUS}}>
+      <div className="flex items-end gap-2 bg-paper p-4" style={{backgroundImage:PLUS}}>
         <img src="/icons/icon-192.png" alt="" width="32" height="32" className="h-8 w-8 shrink-0 rounded-full"/>
         <div className="rounded-2xl rounded-es-md bg-white px-4 py-3 shadow-sm"><div className="text-base">{t("hello")}</div><div dir="ltr" className="mt-1 text-start text-xs text-slate-400">{time}</div></div>
       </div>

@@ -6,9 +6,9 @@ import {useApp} from "@/lib/store";
 // Slide 1 on phones is built live from banner-1-photo.jpg + text (meat & chicken), so the text stays sharp.
 // If a file is missing, a colour slide is shown instead.
 const S=[
-  {k:"s1",e:"🍗",c:"from-ink to-slate-600",img:"/banners/banner-1.jpg",comp:true,d:1600/258,m:3},
-  {k:"s2",e:"🧀",c:"from-brand to-sky-500",img:"/banners/banner-2.jpg",imgM:"/banners/banner-2-m.jpg",d:1600/196,m:1600/483},
-  {k:"s3",e:"🛵",c:"from-teal-700 to-cyan-500",img:"/banners/banner-3.jpg",imgM:"/banners/banner-3-m.jpg",d:1600/206,m:1600/483}];
+  {k:"s1",e:"🍗",c:"from-ink to-stone-600",img:"/banners/banner-1.jpg",comp:true,d:1600/258,m:3},
+  {k:"s2",e:"🧀",c:"from-brand to-brand-dark",img:"/banners/banner-2.jpg",imgM:"/banners/banner-2-m.jpg",d:1600/196,m:1600/483},
+  {k:"s3",e:"🛵",c:"from-brand-dark to-stone-500",img:"/banners/banner-3.jpg",imgM:"/banners/banner-3-m.jpg",d:1600/206,m:1600/483}];
 const TX={ar:{h:"لحوم طازجة",p:"ودجاج كرسبي بجودة عالية",b:"تسوق الآن"},en:{h:"Fresh meat",p:"Crispy chicken, top quality",b:"Shop now"}};
 export default function HeroSlider(){
   const {t,lang,setCat}=useApp();const [i,setI]=useState(0);const [bad,setBad]=useState({});
@@ -23,14 +23,14 @@ export default function HeroSlider(){
           ?<>
             <img src={x.img} alt="" decoding="async" fetchPriority="high" className="hidden h-full w-full object-cover md:block" onError={()=>setBad(b=>({...b,[n]:true}))}/>
             <div dir="ltr" className="flex h-full md:hidden">
-              <div dir={lang==="ar"?"rtl":"ltr"} className="relative z-10 flex w-[44%] shrink-0 flex-col items-start justify-center gap-1.5 bg-gradient-to-br from-[#8a4a1c] to-[#b9692a] px-4 text-white">
+              <div dir={lang==="ar"?"rtl":"ltr"} className="relative z-10 flex w-[44%] shrink-0 flex-col items-start justify-center gap-1.5 bg-gradient-to-br from-brand-dark to-brand px-4 text-white">
                 <h2 className="text-xl font-extrabold leading-tight">{x1.h}</h2>
                 <p className="text-xs leading-snug text-white/90">{x1.p}</p>
-                <button onClick={shop} className="mt-1 rounded-full bg-[#4a2511] px-3 py-1 text-xs font-bold">🛒 {x1.b}</button>
+                <button onClick={shop} className="mt-1 rounded-full bg-[#3A2A22] px-3 py-1 text-xs font-bold">🛒 {x1.b}</button>
               </div>
               <div className="relative flex-1">
                 <img src="/banners/banner-1-photo.jpg" alt="" decoding="async" className="h-full w-full object-cover" style={{objectPosition:"78% 50%"}}/>
-                <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#b9692a] to-transparent"/>
+                <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-brand to-transparent"/>
                 <div className="absolute right-2 top-2 rounded-xl bg-[#f7eedc] px-2 py-1 shadow"><img src="/banners/brand-logo.png" alt="فريش البرج" className="h-7 w-auto"/></div>
               </div>
             </div>
