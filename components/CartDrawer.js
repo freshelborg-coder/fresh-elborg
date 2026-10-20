@@ -7,8 +7,9 @@ export default function CartDrawer(){
   const {t,lang,lines,total,add,dec,cartOpen,setCartOpen,checkout}=useApp();const r=useRouter();
   const [f,setF]=useState({name:"",phone:"",address:"",method:"cod",ref:""});const [err,setErr]=useState("");
   const set=k=>e=>setF({...f,[k]:e.target.value});
-  const submit=()=>{if(!f.name.trim()||!f.phone.trim()||!f.address.trim()||(f.method==="wallet"&&!f.ref.trim())){setErr(t("fill"));return}
-    setErr("");if(checkout(f)){setF({...f,ref:""});r.push("/track")}};
+  const [busy,setBusy]=useState(false);
+  const submit=async()=>{if(busy)return;if(!f.name.trim()||!f.phone.trim()||!f.address.trim()||(f.method==="wallet"&&!f.ref.trim())){setErr(t("fill"));return}
+    setErr("");setBusy(true);const id=await checkout(f);setBusy(false);if(id){setF({...f,ref:""});r.push("/track")}};
   const inp="w-full rounded-xl border border-black/10 bg-paper px-3 py-2 text-sm outline-none focus:ring-2 ring-brand";
   return(<>
     <div onClick={()=>setCartOpen(false)} className={`fixed inset-0 z-40 bg-black/40 transition ${cartOpen?"opacity-100":"pointer-events-none opacity-0"}`}/>
@@ -32,6 +33,6 @@ export default function CartDrawer(){
       </div>
       <div className="space-y-3 border-t p-4">{err&&<p className="text-sm text-red-600">{err}</p>}
         <div className="flex justify-between text-lg font-extrabold"><span>{t("total")}</span><span>{total} {t("cur")}</span></div>
-        <button disabled={!lines.length} onClick={submit} className="btn w-full disabled:opacity-40">{t("checkout")}</button></div>
+        <button disabled={!lines.length||busy} onClick={submit} className="btn w-full disabled:opacity-40">{busy?"...":t("checkout")}</button></div>
     </aside></>);
 }

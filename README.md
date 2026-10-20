@@ -7,3 +7,9 @@ Next.js 14 + Tailwind. Run: `npm install && npm run dev` -> http://localhost:300
 
 ## Cloudflare Pages
 Build command: `npm run build` | Output directory: `out` | Env var: `NODE_VERSION=20`
+
+## Server (orders, prices, photos, WhatsApp alert) — Cloudflare Pages Functions
+The `functions/` folder runs on Cloudflare. In the Pages project settings you need:
+1. KV namespace bound with the variable name `DB`.
+2. Variables: `ADMIN_PASSWORD` (admin login), `OWNER_PHONE` (e.g. +201011411026) and `CALLMEBOT_KEY` (from callmebot.com) for the WhatsApp alert.
+Without them the site still works, but orders/prices stay on each device.
