@@ -17,6 +17,8 @@ export default function OrdersTab({orders,err,reload,patch}){
       return(<article key={o.id} className={`rounded-2xl border-2 p-3 ${SC[o.status]||""}`}>
         <div className="flex items-center justify-between"><b>#{o.id}</b><span className="text-xs text-ink/60">{new Date(o.at).toLocaleString("ar-EG",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div>
         <div className="mt-1 text-lg font-extrabold text-brand">{o.total} ج.م</div>
+        {o.delivery?.label&&<div className="mt-1 text-sm font-bold">🕒 {o.delivery.label}</div>}
+        {o.discount>0&&<div className="text-sm text-green-700">🏷️ كود {o.promo}: خصم {o.discount} ج.م</div>}
         <div className="mt-2 text-sm"><div className="font-bold">👤 {o.customer?.name}</div><div>📍 {o.customer?.address}</div>
           <div className="mt-1 flex flex-wrap gap-2"><a href={`tel:${o.customer?.phone}`} className="rounded-lg bg-white px-3 py-1.5 font-bold ring-1 ring-black/10">📞 {o.customer?.phone}</a>
             <a href={`https://wa.me/${intl(o.customer?.phone)}?text=${encodeURIComponent(say)}`} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[#25D366] px-3 py-1.5 font-bold text-white">واتساب للعميل</a></div></div>

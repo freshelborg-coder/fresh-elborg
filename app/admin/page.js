@@ -4,6 +4,7 @@ import {api,adminKey,setAdminKey} from "@/lib/api";
 import OrdersTab from "@/components/admin/OrdersTab";
 import ProductsTab from "@/components/admin/ProductsTab";
 import StatsTab from "@/components/admin/StatsTab";
+import PromosTab from "@/components/admin/PromosTab";
 export default function Admin(){
   const [state,setState]=useState("check");const [info,setInfo]=useState(null);const [pw,setPw]=useState("");const [msg,setMsg]=useState("");
   const [tab,setTab]=useState("orders");const [orders,setOrders]=useState(null);const [oerr,setOerr]=useState("");const [test,setTest]=useState("");
@@ -31,7 +32,7 @@ export default function Admin(){
     <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){setAdminKey(pw);verify(false)}}} placeholder="كلمة السر" className="w-full rounded-xl border px-3 py-3"/>
     {msg&&<p className="text-sm font-bold text-red-600">{msg}</p>}
     <button className="btn w-full" onClick={()=>{setAdminKey(pw);verify(false)}}>دخول</button></div>);
-  const TABS=[["orders",`📦 الطلبات${nNew?` (${nNew})`:""}`],["products","🛍️ المنتجات"],["stats","📊 المبيعات"]];
+  const TABS=[["orders",`📦 الطلبات${nNew?` (${nNew})`:""}`],["products","🛍️ المنتجات"],["promos","🏷️ الكوبونات"],["stats","📊 المبيعات"]];
   return(<div className="space-y-3">
     <div className="flex items-center justify-between"><h1 className="text-xl font-extrabold">لوحة الإدارة</h1>
       <button onClick={()=>{setAdminKey("");setState("login");setPw("")}} className="text-sm underline">خروج</button></div>
@@ -41,6 +42,7 @@ export default function Admin(){
     <div className="sticky top-[118px] z-20 flex gap-2 rounded-2xl bg-paper py-1">{TABS.map(([k,l])=><button key={k} onClick={()=>setTab(k)} className={`flex-1 rounded-xl px-2 py-2.5 text-sm font-bold ${tab===k?"bg-brand text-white":"bg-white ring-1 ring-black/10"}`}>{l}</button>)}</div>
     {tab==="orders"&&<OrdersTab orders={orders} err={oerr} reload={load} patch={patch}/>}
     {tab==="products"&&<ProductsTab/>}
+    {tab==="promos"&&<PromosTab/>}
     {tab==="stats"&&<StatsTab orders={orders}/>}
   </div>);
 }

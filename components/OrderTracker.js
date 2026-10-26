@@ -13,6 +13,7 @@ export default function OrderTracker(){
   const msg=`${ar?"طلب رقم":"Order"} #${o.id}\n${o.customer?.name||""}\n${o.customer?.phone||""}\n${o.customer?.address||""}\n\n${body}\n\n${ar?"الإجمالي":"Total"}: ${o.total}`;
   const wa=`https://wa.me/${PAY.whatsapp}?text=${encodeURIComponent(msg)}`;
   return(<div className="space-y-4"><h1 className="text-xl font-extrabold">#{o.id}</h1>
+    {o.delivery?.label&&<p className="text-sm font-bold text-ink/70">🕒 {o.delivery.label}</p>}
     <div className="card overflow-hidden"><svg viewBox="0 0 360 200" className="w-full bg-brand-soft" role="img" aria-label="map">
       <path d="M0 150 Q90 120 150 150 T360 100" stroke="#fff" strokeWidth="14" fill="none"/>
       <polyline points={PTS.map(p=>p.join(",")).join(" ")} fill="none" stroke="#B5472F" strokeWidth="3" strokeDasharray="6 6"/>
