@@ -20,6 +20,8 @@ export default function OrdersTab({orders,err,reload,patch}){
         {o.delivery?.label&&<div className="mt-1 text-sm font-bold">🕒 {o.delivery.label}</div>}
         {o.discount>0&&<div className="text-sm text-green-700">🏷️ كود {o.promo}: خصم {o.discount} ج.م</div>}
         <div className="mt-2 text-sm"><div className="font-bold">👤 {o.customer?.name}</div><div>📍 {o.customer?.address}</div>
+          {o.location&&<a href={`https://www.google.com/maps?q=${o.location.lat},${o.location.lng}`} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block rounded-lg bg-white px-3 py-1.5 font-bold text-sky-700 ring-1 ring-black/10">🗺️ افتح الموقع على الخريطة{o.distanceKm?` (${o.distanceKm} كم)`:""}</a>}
+          {o.deliveryFee>0&&<div>🛵 رسوم التوصيل: {o.deliveryFee} ج.م</div>}
           <div className="mt-1 flex flex-wrap gap-2"><a href={`tel:${o.customer?.phone}`} className="rounded-lg bg-white px-3 py-1.5 font-bold ring-1 ring-black/10">📞 {o.customer?.phone}</a>
             <a href={`https://wa.me/${intl(o.customer?.phone)}?text=${encodeURIComponent(say)}`} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[#25D366] px-3 py-1.5 font-bold text-white">واتساب للعميل</a></div></div>
         <ul className="mt-2 space-y-0.5 rounded-xl bg-white/70 p-2 text-sm">{(o.items||[]).map((i,n)=><li key={n}>{i.qty} × {i.name||i.id}{i.weight?` (${i.weight})`:""}</li>)}</ul>

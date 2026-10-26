@@ -1,6 +1,7 @@
 import {json,isAdmin,getCatalog,getPromos,evalPromo,orderText,notifyUrl} from "../../lib/server.js";
 import {normPhone,validPhone,validName,validAddress} from "../../lib/validate.js";
-import {checkDelivery,cairoNow} from "../../lib/config.js";
+import {checkDelivery,cairoNow,DELIVERY} from "../../lib/config.js";
+import {quote} from "../../lib/delivery.js";
 const clip=(v,n)=>String(v??"").trim().slice(0,n);
 // POST: a customer places an order (public). Everything is checked and priced again on the server.
 export async function onRequestPost(ctx){
@@ -25,22 +26,30 @@ export async function onRequestPost(ctx){
     items.push({id:p.id,qty,price:p.price,name:p.name.ar,weight:p.weight});subtotal+=p.price*qty;
   }
   if(!items.length)return json({error:"empty"},400);
-  let discount=0,promoCode=null;const code=clip(b.promo,20).toUpperCase();
+  let discount=0,promoCode=null,promos=null,pi=-1;const code=clip(b.promo,20).toUpperCase();
   if(code){
-    const promos=await getPromos(env);const i=promos.findIndex(x=>x.code===code);const r=evalPromo(promos[i],subtotal,now.date);
+    promos=await getPromos(env);pi=promos.findIndex(x=>x.code===code);const r=evalPromo(promos[pi],subtotal,now.date);
     if(!r.ok)return json({error:"promo-"+(r.error||"invalid"),min:r.min},400);
-    discount=r.discount;promoCode=code;promos[i]={...promos[i],used:(promos[i].used||0)+1};
-    await env.DB.put("promos",JSON.stringify(promos));
+    discount=r.discount;promoCode=code;
   }
+  // delivery fee from the pinned location, computed here so the app cannot cheat
+  let qf={ok:true,km:null,fee:0},location=null;
+  if(DELIVERY.requirePin||b.location){
+    const lo=b.location;if(!lo)return json({error:"no-location"},400);
+    qf=quote({lat:Number(lo.lat),lng:Number(lo.lng)},subtotal-discount);
+    if(!qf.ok)return json({error:qf.error,km:qf.km},400);
+    location={lat:Math.round(Number(lo.lat)*1e6)/1e6,lng:Math.round(Number(lo.lng)*1e6)/1e6};
+  }
+  if(promoCode){promos[pi]={...promos[pi],used:(promos[pi].used||0)+1};await env.DB.put("promos",JSON.stringify(promos))}   // counted only after everything is valid
   const at=Date.now();const id=(at%1e9).toString(36).toUpperCase()+Math.random().toString(36).slice(2,4).toUpperCase();
-  const order={id,items,subtotal,discount,promo:promoCode,total:subtotal-discount,delivery:{day:b.delivery.day,slot:b.delivery.slot,label:del.label},status:"new",driver:"",at,customer,
+  const order={id,items,subtotal,discount,promo:promoCode,total:subtotal-discount+qf.fee,deliveryFee:qf.fee,distanceKm:qf.km,location,delivery:{day:b.delivery.day,slot:b.delivery.slot,label:del.label},status:"new",driver:"",at,customer,
     pay:{method,ref,status:method==="cod"?"cod":"pending"}};
   await env.DB.put("ord:"+id,JSON.stringify(order));
   await env.DB.put("order:"+String(9999999999999-at).padStart(13,"0")+":"+id,id);
   await env.DB.put(rk,String(recent+1),{expirationTtl:900});
   const url=notifyUrl(env,orderText(order));
   if(url)ctx.waitUntil(fetch(url).catch(()=>{}));
-  return json({ok:true,id,total:order.total,discount,deliveryLabel:del.label,notified:!!url});
+  return json({ok:true,id,total:order.total,discount,deliveryFee:qf.fee,distanceKm:qf.km,deliveryLabel:del.label,notified:!!url});
 }
 // GET: admin lists the latest orders
 export async function onRequestGet({request,env}){

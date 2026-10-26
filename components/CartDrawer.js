@@ -4,13 +4,16 @@ import {useRouter} from "next/navigation";
 import {useApp} from "@/lib/store";
 import {api} from "@/lib/api";
 import {PAY,METHODS} from "@/lib/payments";
-import {cairoNow,daysList,slotsFor,isOpenNow,checkDelivery} from "@/lib/config";
+import dynamic from "next/dynamic";
+import {cairoNow,daysList,slotsFor,isOpenNow,checkDelivery,DELIVERY} from "@/lib/config";
+import {quote} from "@/lib/delivery";
 import {validPhone,validName,validAddress} from "@/lib/validate";
+const MapPicker=dynamic(()=>import("./MapPicker"),{ssr:false});
 const TX={
- ar:{when:"موعد التوصيل",asap:"في أقرب وقت (خلال ساعة تقريباً)",closed:"مفيش مواعيد متاحة في اليوم ده",promo:"كود الخصم",apply:"تطبيق",remove:"إلغاء",sub:"المجموع",disc:"الخصم",
+ ar:{pin:"حدد موقعك على الخريطة",pinned:"تم تحديد الموقع ✓",change:"تغيير",dist:"المسافة التقريبية",fee:"رسوم التوصيل",free:"توصيل مجاني 🎉",out:"الموقع ده خارج نطاق التوصيل",e_pin:"حدد موقعك على الخريطة الأول",when:"موعد التوصيل",asap:"في أقرب وقت (خلال ساعة تقريباً)",closed:"مفيش مواعيد متاحة في اليوم ده",promo:"كود الخصم",apply:"تطبيق",remove:"إلغاء",sub:"المجموع",disc:"الخصم",
   p_invalid:"الكود غير صحيح",p_expired:"الكود منتهي",p_used:"الكود خلص عدده",p_min:"الحد الأدنى للطلب لهذا الكود",p_ok:"تم تطبيق الكود 🎉",
   e_phone:"اكتب رقم موبايل صحيح (مثال: 01012345678)",e_name:"اكتب اسمك (حرفين على الأقل)",e_addr:"اكتب العنوان بالتفصيل (8 حروف على الأقل)",e_slot:"الموعد ده بقى مش متاح، اختار موعد تاني",e_pick:"اختار موعد التوصيل",e_many:"حاولت أكتر من مرة في وقت قصير، جرّب بعد شوية",e_gen:"حصلت مشكلة، جرّب تاني"},
- en:{when:"Delivery time",asap:"As soon as possible (about 1 hour)",closed:"No slots available for this day",promo:"Promo code",apply:"Apply",remove:"Remove",sub:"Subtotal",disc:"Discount",
+ en:{pin:"Pin your location on the map",pinned:"Location set ✓",change:"Change",dist:"Approx. distance",fee:"Delivery fee",free:"Free delivery 🎉",out:"This location is outside our delivery area",e_pin:"Pin your location on the map first",when:"Delivery time",asap:"As soon as possible (about 1 hour)",closed:"No slots available for this day",promo:"Promo code",apply:"Apply",remove:"Remove",sub:"Subtotal",disc:"Discount",
   p_invalid:"Invalid code",p_expired:"Code expired",p_used:"Code fully used",p_min:"Minimum order for this code",p_ok:"Code applied 🎉",
   e_phone:"Enter a valid mobile number (e.g. 01012345678)",e_name:"Enter your name (2+ letters)",e_addr:"Enter the full address (8+ characters)",e_slot:"That slot is no longer available, pick another",e_pick:"Choose a delivery time",e_many:"Too many attempts, try again in a little while",e_gen:"Something went wrong, try again"}};
 export default function CartDrawer(){
@@ -26,6 +29,8 @@ export default function CartDrawer(){
   const asap=curDay===now.date&&isOpenNow(now);
   // promo code
   const [pin,setPin]=useState("");const [promo,setPromo]=useState(null);const [pmsg,setPmsg]=useState("");
+  const [loc,setLoc]=useState(null);const [showMap,setShowMap]=useState(false);
+  useEffect(()=>{try{const c=JSON.parse(localStorage.getItem("fb_cust")||"null");if(c){setF(v=>({...v,name:c.name||"",phone:c.phone||"",address:c.address||""}));if(c.loc)setLoc(c.loc)}}catch{}},[]);   // remember the customer for next time
   const body=()=>lines.map(l=>({id:l.p.id,qty:l.qty}));
   const perr=(e,min)=>e==="expired"?x.p_expired:e==="used-up"?x.p_used:e==="min"?`${x.p_min}: ${min} ${t("cur")}`:x.p_invalid;
   const applyPromo=async(code=pin)=>{
@@ -34,17 +39,20 @@ export default function CartDrawer(){
     if(q.ok&&q.data?.ok){setPromo({code:c,discount:q.data.discount});setPmsg(x.p_ok)}else{setPromo(null);setPmsg(perr(q.data?.error,q.data?.min))}
   };
   useEffect(()=>{if(promo)applyPromo(promo.code)},[total]);                 // cart changed: re-check the code
-  const discount=promo?promo.discount:0;const grand=Math.max(0,total-discount);
-  const E=c=>c==="bad-phone"?x.e_phone:c==="bad-name"?x.e_name:c==="bad-address"?x.e_addr:c==="slot-invalid"?x.e_slot:c==="too-many"?x.e_many:c?.startsWith("promo-")?perr(c.slice(6)):x.e_gen;
+  const discount=promo?promo.discount:0;const payable=Math.max(0,total-discount);
+  const dq=loc?quote(loc,payable):null;const fee=dq&&dq.ok?dq.fee:0;const grand=payable+fee;
+  const E=c=>c==="bad-phone"?x.e_phone:c==="bad-name"?x.e_name:c==="bad-address"?x.e_addr:c==="slot-invalid"?x.e_slot:c==="too-many"?x.e_many:c==="no-location"?x.e_pin:(c==="bad-location"||c==="out-of-range")?x.out:c?.startsWith("promo-")?perr(c.slice(6)):x.e_gen;
   const submit=async()=>{
     if(busy)return;
     if(!validName(f.name))return setErr(x.e_name);if(!validPhone(f.phone))return setErr(x.e_phone);if(!validAddress(f.address))return setErr(x.e_addr);
+    if(DELIVERY.requirePin&&!loc)return setErr(x.e_pin);if(loc&&!dq.ok)return setErr(x.out);
     const delivery={day:curDay,slot};if(!slot||!checkDelivery(delivery,cairoNow()).ok)return setErr(slot?x.e_slot:x.e_pick);
     if(f.method==="wallet"&&!f.ref.trim())return setErr(t("fill"));
     setErr("");setBusy(true);
-    const res=await checkout({...f,delivery,promo:promo?.code||"",discount});setBusy(false);
+    const res=await checkout({...f,delivery,promo:promo?.code||"",discount,location:loc});setBusy(false);
     if(res&&res.error){setErr(E(res.error));if(res.error==="slot-invalid")setSlot("");if(res.error.startsWith("promo-")){setPromo(null)}return}
-    if(res){setF({...f,ref:""});setPromo(null);setPin("");setPmsg("");setSlot("");r.push("/track")}
+    if(res){try{localStorage.setItem("fb_cust",JSON.stringify({name:f.name,phone:f.phone,address:f.address,loc}))}catch{}
+      setF({...f,ref:""});setPromo(null);setPin("");setPmsg("");setSlot("");r.push("/track")}
   };
   const inp="w-full rounded-xl border border-black/10 bg-paper px-3 py-2 text-sm outline-none focus:ring-2 ring-brand";
   const chip=on=>`rounded-xl border px-3 py-2 text-sm font-bold ${on?"border-brand bg-brand text-white":"border-black/10 bg-white"}`;
@@ -61,6 +69,8 @@ export default function CartDrawer(){
           <input className={inp} placeholder={t("name")} autoComplete="name" maxLength={60} value={f.name} onChange={set("name")}/>
           <input className={inp} placeholder={t("phone")} inputMode="tel" autoComplete="tel" maxLength={16} dir="ltr" value={f.phone} onChange={set("phone")}/>
           <input className={inp} placeholder={t("address")} autoComplete="street-address" maxLength={250} value={f.address} onChange={set("address")}/>
+          <button type="button" onClick={()=>setShowMap(true)} className={`flex w-full items-center justify-between rounded-xl border p-3 text-start text-sm font-bold ${loc?"border-green-400 bg-green-50":"border-brand bg-brand-soft"}`}><span>📍 {loc?x.pinned:x.pin}</span><span className="text-xs font-normal">{loc?x.change:""}</span></button>
+          {dq&&(dq.ok?<p className="text-sm">{x.dist}: <b>{dq.km} {lang==="en"?"km":"كم"}</b> • {x.fee}: <b>{dq.free?x.free:`${dq.fee} ${t("cur")}`}</b></p>:<p className="text-sm font-bold text-red-600">{x.out}</p>)}
           <input tabIndex={-1} autoComplete="off" aria-hidden="true" name="website" value={f.hp} onChange={set("hp")} className="absolute -left-[9999px] h-0 w-0 opacity-0"/>
           <div className="pt-1 text-sm font-extrabold">🕒 {x.when}</div>
           <div className="flex gap-2">{days.map(d=><button key={d.id} onClick={()=>{setDay(d.id);setSlot("")}} className={`flex-1 ${chip(curDay===d.id)}`}>{d.label}</button>)}</div>
@@ -81,8 +91,11 @@ export default function CartDrawer(){
         </div>}
       </div>
       <div className="space-y-2 border-t p-4">{err&&<p className="text-sm font-bold text-red-600">{err}</p>}
-        {discount>0&&<><div className="flex justify-between text-sm"><span>{x.sub}</span><span>{total} {t("cur")}</span></div><div className="flex justify-between text-sm text-green-700"><span>{x.disc} ({promo.code})</span><span>-{discount} {t("cur")}</span></div></>}
+        {(discount>0||dq?.ok)&&<><div className="flex justify-between text-sm"><span>{x.sub}</span><span>{total} {t("cur")}</span></div>
+          {discount>0&&<div className="flex justify-between text-sm text-green-700"><span>{x.disc} ({promo.code})</span><span>-{discount} {t("cur")}</span></div>}
+          {dq?.ok&&<div className="flex justify-between text-sm"><span>🛵 {x.fee}</span><span>{dq.free?x.free:`${dq.fee} ${t("cur")}`}</span></div>}</>}
         <div className="flex justify-between text-lg font-extrabold"><span>{t("total")}</span><span>{grand} {t("cur")}</span></div>
         <button disabled={!lines.length||busy} onClick={submit} className="btn w-full disabled:opacity-40">{busy?"...":t("checkout")}</button></div>
-    </aside></>);
+    </aside>
+    {showMap&&<MapPicker lang={lang} initial={loc} payable={payable} onClose={()=>setShowMap(false)} onConfirm={p=>{setLoc(p);setShowMap(false)}}/>}</>);
 }
