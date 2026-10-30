@@ -1,6 +1,6 @@
-import {json,isAdmin,getCatalog,getPromos,evalPromo,orderText,notifyUrl} from "../../lib/server.js";
+import {json,isAdmin,getCatalog,getPromos,evalPromo,getDelivery,orderText,notifyUrl} from "../../lib/server.js";
 import {normPhone,validPhone,validName,validAddress} from "../../lib/validate.js";
-import {checkDelivery,cairoNow,DELIVERY} from "../../lib/config.js";
+import {checkDelivery,cairoNow} from "../../lib/config.js";
 import {quote} from "../../lib/delivery.js";
 const clip=(v,n)=>String(v??"").trim().slice(0,n);
 // POST: a customer places an order (public). Everything is checked and priced again on the server.
@@ -33,10 +33,10 @@ export async function onRequestPost(ctx){
     discount=r.discount;promoCode=code;
   }
   // delivery fee from the pinned location, computed here so the app cannot cheat
-  let qf={ok:true,km:null,fee:0},location=null;
-  if(DELIVERY.requirePin||b.location){
+  let qf={ok:true,km:null,fee:0},location=null;const dcfg=await getDelivery(env);
+  if(dcfg.requirePin||b.location){
     const lo=b.location;if(!lo)return json({error:"no-location"},400);
-    qf=quote({lat:Number(lo.lat),lng:Number(lo.lng)},subtotal-discount);
+    qf=quote({lat:Number(lo.lat),lng:Number(lo.lng)},subtotal-discount,dcfg);
     if(!qf.ok)return json({error:qf.error,km:qf.km},400);
     location={lat:Math.round(Number(lo.lat)*1e6)/1e6,lng:Math.round(Number(lo.lng)*1e6)/1e6};
   }

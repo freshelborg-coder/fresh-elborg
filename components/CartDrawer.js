@@ -5,7 +5,7 @@ import {useApp} from "@/lib/store";
 import {api} from "@/lib/api";
 import {PAY,METHODS} from "@/lib/payments";
 import dynamic from "next/dynamic";
-import {cairoNow,daysList,slotsFor,isOpenNow,checkDelivery,DELIVERY} from "@/lib/config";
+import {cairoNow,daysList,slotsFor,isOpenNow,checkDelivery} from "@/lib/config";
 import {quote} from "@/lib/delivery";
 import {validPhone,validName,validAddress} from "@/lib/validate";
 const MapPicker=dynamic(()=>import("./MapPicker"),{ssr:false});
@@ -17,7 +17,7 @@ const TX={
   p_invalid:"Invalid code",p_expired:"Code expired",p_used:"Code fully used",p_min:"Minimum order for this code",p_ok:"Code applied 🎉",
   e_phone:"Enter a valid mobile number (e.g. 01012345678)",e_name:"Enter your name (2+ letters)",e_addr:"Enter the full address (8+ characters)",e_slot:"That slot is no longer available, pick another",e_pick:"Choose a delivery time",e_many:"Too many attempts, try again in a little while",e_gen:"Something went wrong, try again"}};
 export default function CartDrawer(){
-  const {t,lang,lines,total,add,dec,cartOpen,setCartOpen,checkout}=useApp();const r=useRouter();const x=TX[lang]||TX.ar;
+  const {t,lang,lines,total,add,dec,cartOpen,setCartOpen,checkout,delivery:DL}=useApp();const r=useRouter();const x=TX[lang]||TX.ar;
   const [f,setF]=useState({name:"",phone:"",address:"",method:"cod",ref:"",hp:""});const [err,setErr]=useState("");const [busy,setBusy]=useState(false);
   const set=k=>e=>setF({...f,[k]:e.target.value});
   // delivery day / slot (recomputed when the drawer opens, so past slots disappear)
@@ -40,12 +40,12 @@ export default function CartDrawer(){
   };
   useEffect(()=>{if(promo)applyPromo(promo.code)},[total]);                 // cart changed: re-check the code
   const discount=promo?promo.discount:0;const payable=Math.max(0,total-discount);
-  const dq=loc?quote(loc,payable):null;const fee=dq&&dq.ok?dq.fee:0;const grand=payable+fee;
+  const dq=loc?quote(loc,payable,DL):null;const fee=dq&&dq.ok?dq.fee:0;const grand=payable+fee;
   const E=c=>c==="bad-phone"?x.e_phone:c==="bad-name"?x.e_name:c==="bad-address"?x.e_addr:c==="slot-invalid"?x.e_slot:c==="too-many"?x.e_many:c==="no-location"?x.e_pin:(c==="bad-location"||c==="out-of-range")?x.out:c?.startsWith("promo-")?perr(c.slice(6)):x.e_gen;
   const submit=async()=>{
     if(busy)return;
     if(!validName(f.name))return setErr(x.e_name);if(!validPhone(f.phone))return setErr(x.e_phone);if(!validAddress(f.address))return setErr(x.e_addr);
-    if(DELIVERY.requirePin&&!loc)return setErr(x.e_pin);if(loc&&!dq.ok)return setErr(x.out);
+    if(DL.requirePin&&!loc)return setErr(x.e_pin);if(loc&&!dq.ok)return setErr(x.out);
     const delivery={day:curDay,slot};if(!slot||!checkDelivery(delivery,cairoNow()).ok)return setErr(slot?x.e_slot:x.e_pick);
     if(f.method==="wallet"&&!f.ref.trim())return setErr(t("fill"));
     setErr("");setBusy(true);
@@ -97,5 +97,5 @@ export default function CartDrawer(){
         <div className="flex justify-between text-lg font-extrabold"><span>{t("total")}</span><span>{grand} {t("cur")}</span></div>
         <button disabled={!lines.length||busy} onClick={submit} className="btn w-full disabled:opacity-40">{busy?"...":t("checkout")}</button></div>
     </aside>
-    {showMap&&<MapPicker lang={lang} initial={loc} payable={payable} onClose={()=>setShowMap(false)} onConfirm={p=>{setLoc(p);setShowMap(false)}}/>}</>);
+    {showMap&&<MapPicker lang={lang} cfg={DL} initial={loc} payable={payable} onClose={()=>setShowMap(false)} onConfirm={p=>{setLoc(p);setShowMap(false)}}/>}</>);
 }

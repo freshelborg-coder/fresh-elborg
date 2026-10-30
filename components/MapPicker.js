@@ -1,8 +1,8 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {DELIVERY} from "@/lib/config";
 import {quote} from "@/lib/delivery";
 // Map (Leaflet + OpenStreetMap, free, no API key). The library is loaded only when this window opens.
+// mode "store" = the admin sets the shop location; default = the customer pins the delivery location.
 const CSS=["https://unpkg.com/leaflet@1.9.4/dist/leaflet.css","sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="];
 const JS=["https://unpkg.com/leaflet@1.9.4/dist/leaflet.js","sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="];
 function loadLeaflet(){return new Promise((res,rej)=>{
@@ -12,20 +12,20 @@ function loadLeaflet(){return new Promise((res,rej)=>{
   if(!s){s=document.createElement("script");s.id="lf-js";s.src=JS[0];s.integrity=JS[1];s.crossOrigin="";s.async=true;document.head.appendChild(s)}
   s.addEventListener("load",()=>res(window.L));s.addEventListener("error",()=>{s.remove();rej(new Error("leaflet"))});
 })}
-const TX={ar:{title:"حدد مكان التوصيل",hint:"اضغط على الخريطة أو حرّك الدبوس 📍 لمكان بيتك",me:"📡 موقعي الحالي",ok:"تأكيد الموقع ✓",dist:"المسافة التقريبية",km:"كم",fee:"رسوم التوصيل",free:"توصيل مجاني 🎉",out:"الموقع ده خارج نطاق التوصيل",
+const TX={ar:{title:"حدد مكان التوصيل",titleS:"حدد مكان المحل (نقطة البداية)",hint:"اضغط على الخريطة أو حرّك الدبوس 📍 لمكان بيتك",hintS:"اضغط على الخريطة أو حرّك الدبوس 📍 لمكان محلك أو بيتك",me:"📡 موقعي الحالي",ok:"تأكيد الموقع ✓",okS:"حفظ مكان المحل ✓",dist:"المسافة التقريبية",km:"كم",fee:"رسوم التوصيل",free:"توصيل مجاني 🎉",out:"الموقع ده خارج نطاق التوصيل",
   locating:"جاري تحديد موقعك...",gpsFail:"مقدرناش نحدد موقعك. فعّل الـ GPS أو حرّك الدبوس بإيدك",err:"الخريطة ما اتحمّلتش. اتأكد من النت وجرّب تاني",loading:"جاري تحميل الخريطة..."},
- en:{title:"Choose delivery location",hint:"Tap the map or drag the pin 📍 to your place",me:"📡 My location",ok:"Confirm location ✓",dist:"Approx. distance",km:"km",fee:"Delivery fee",free:"Free delivery 🎉",out:"This location is outside our delivery area",
+ en:{title:"Choose delivery location",titleS:"Set the shop location (starting point)",hint:"Tap the map or drag the pin 📍 to your place",hintS:"Tap the map or drag the pin 📍 to your shop / home",me:"📡 My location",ok:"Confirm location ✓",okS:"Save shop location ✓",dist:"Approx. distance",km:"km",fee:"Delivery fee",free:"Free delivery 🎉",out:"This location is outside our delivery area",
   locating:"Finding your location...",gpsFail:"Could not get your location. Turn on GPS or drag the pin",err:"The map could not load. Check your internet and try again",loading:"Loading map..."}};
-export default function MapPicker({lang,initial,payable,onConfirm,onClose}){
-  const x=TX[lang]||TX.ar,el=useRef(null),mapRef=useRef(null),pinRef=useRef(null),putRef=useRef(null);
+export default function MapPicker({lang,cfg,mode,initial,payable,onConfirm,onClose}){
+  const x=TX[lang]||TX.ar,isStore=mode==="store",el=useRef(null),mapRef=useRef(null),pinRef=useRef(null),putRef=useRef(null);
   const [pos,setPos]=useState(initial||null),[state,setState]=useState("loading"),[gps,setGps]=useState("");
   useEffect(()=>{
     let dead=false;
     loadLeaflet().then(L=>{
       if(dead||!el.current)return;
-      const c=initial||DELIVERY.store,m=L.map(el.current).setView([c.lat,c.lng],initial?16:13);
+      const c=initial||cfg.store,m=L.map(el.current).setView([c.lat,c.lng],initial?16:13);
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(m);
-      L.marker([DELIVERY.store.lat,DELIVERY.store.lng],{icon:L.divIcon({html:"🏪",className:"fb-pin",iconSize:[32,32],iconAnchor:[16,16]}),interactive:false}).addTo(m);
+      if(!isStore)L.marker([cfg.store.lat,cfg.store.lng],{icon:L.divIcon({html:"🏪",className:"fb-pin",iconSize:[32,32],iconAnchor:[16,16]}),interactive:false}).addTo(m);
       const icon=L.divIcon({html:"📍",className:"fb-pin",iconSize:[34,34],iconAnchor:[17,32]});
       const put=ll=>{
         setPos({lat:ll.lat,lng:ll.lng});
@@ -42,16 +42,17 @@ export default function MapPicker({lang,initial,payable,onConfirm,onClose}){
     setGps(x.locating);
     navigator.geolocation.getCurrentPosition(p=>{const ll={lat:p.coords.latitude,lng:p.coords.longitude};mapRef.current&&mapRef.current.setView([ll.lat,ll.lng],17);putRef.current&&putRef.current(ll);setGps("")},()=>setGps(x.gpsFail),{enableHighAccuracy:true,timeout:10000});
   };
-  const q=pos?quote(pos,payable):null;
+  const q=pos&&!isStore?quote(pos,payable,cfg):null;
+  const canOk=isStore?!!pos:!!q?.ok;
   return(<div className="fixed inset-0 z-[90] flex flex-col bg-white" role="dialog" aria-modal="true">
-    <div className="flex items-center justify-between border-b p-3"><h2 className="font-extrabold">📍 {x.title}</h2><button onClick={onClose} className="text-2xl" aria-label="close">×</button></div>
+    <div className="flex items-center justify-between border-b p-3"><h2 className="font-extrabold">📍 {isStore?x.titleS:x.title}</h2><button onClick={onClose} className="text-2xl" aria-label="close">×</button></div>
     <div className="relative flex-1">
       <div ref={el} className="absolute inset-0"/>
       {state!=="ready"&&<div className="absolute inset-0 z-[500] grid place-items-center bg-white p-6 text-center font-bold text-ink/70">{state==="error"?x.err:x.loading}</div>}
     </div>
     <div className="space-y-2 border-t p-3">
-      <p className="text-center text-sm">{gps||(!pos?x.hint:q?.ok?<>{x.dist}: <b>{q.km} {x.km}</b> • {x.fee}: <b>{q.free?x.free:`${q.fee} ${lang==="en"?"EGP":"ج.م"}`}</b></>:<span className="font-bold text-red-600">{x.out}</span>)}</p>
+      <p className="text-center text-sm">{gps||(!pos||isStore?(isStore?x.hintS:x.hint):q?.ok?<>{x.dist}: <b>{q.km} {x.km}</b> • {x.fee}: <b>{q.free?x.free:`${q.fee} ${lang==="en"?"EGP":"ج.م"}`}</b></>:<span className="font-bold text-red-600">{x.out}</span>)}</p>
       <div className="flex gap-2"><button onClick={locate} className="flex-1 rounded-xl border border-brand bg-brand-soft px-3 py-3 text-sm font-bold">{x.me}</button>
-        <button disabled={!q?.ok} onClick={()=>onConfirm({lat:Math.round(pos.lat*1e6)/1e6,lng:Math.round(pos.lng*1e6)/1e6})} className="btn flex-1 py-3 disabled:opacity-40">{x.ok}</button></div>
+        <button disabled={!canOk} onClick={()=>onConfirm({lat:Math.round(pos.lat*1e6)/1e6,lng:Math.round(pos.lng*1e6)/1e6})} className="btn flex-1 py-3 disabled:opacity-40">{isStore?x.okS:x.ok}</button></div>
     </div></div>);
 }
