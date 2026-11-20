@@ -1,4 +1,4 @@
-import {json,isAdmin,getCatalog,getPromos,evalPromo,getDelivery,orderText,notifyUrl} from "../../lib/server.js";
+import {json,isAdmin,getCatalog,getPromos,evalPromo,getDelivery,orderText,notifyUrl,notifyTelegram} from "../../lib/server.js";
 import {normPhone,validPhone,validName,validAddress} from "../../lib/validate.js";
 import {checkDelivery,cairoNow} from "../../lib/config.js";
 import {quote} from "../../lib/delivery.js";
@@ -49,7 +49,9 @@ export async function onRequestPost(ctx){
   await env.DB.put(rk,String(recent+1),{expirationTtl:900});
   const url=notifyUrl(env,orderText(order));
   if(url)ctx.waitUntil(fetch(url).catch(()=>{}));
-  return json({ok:true,id,total:order.total,discount,deliveryFee:qf.fee,distanceKm:qf.km,deliveryLabel:del.label,notified:!!url});
+  const tg=notifyTelegram(env,orderText(order));
+  if(tg)ctx.waitUntil(tg.catch(()=>{}));
+  return json({ok:true,id,total:order.total,discount,deliveryFee:qf.fee,distanceKm:qf.km,deliveryLabel:del.label,notified:!!url||!!tg});
 }
 // GET: admin lists the latest orders
 export async function onRequestGet({request,env}){
