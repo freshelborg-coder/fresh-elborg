@@ -2,7 +2,7 @@
 // - Images / fonts / built JS+CSS: cache-first (instant, no network)
 // - Pages (HTML): stale-while-revalidate (opens instantly, refreshes in the background)
 // - /api/*: never cached
-const CACHE = "fresh-alburj-v4";
+const CACHE = "fresh-alburj-v5";
 const SHELL = ["/", "/icons/icon-192.png", "/icons/icon-512.png"];
 const MAX_ENTRIES = 250;
 
@@ -66,6 +66,39 @@ self.addEventListener("fetch", (e) => {
         })
         .catch(() => hit || caches.match("/"));
       return hit || net;
+    })
+  );
+});
+
+// ---- notifications (Web Push) ----
+// The push itself is empty; we fetch the message text from the server, then show it.
+self.addEventListener("push", (e) => {
+  e.waitUntil((async () => {
+    let m = null;
+    try {
+      const sub = await self.registration.pushManager.getSubscription();
+      if (sub) {
+        const r = await fetch("/api/push/pull", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+        if (r.ok) m = await r.json();
+      }
+    } catch (err) {}
+    if (!m || !m.title) m = { title: "فريش البرج", body: "عندك تحديث جديد", url: "/" };
+    await self.registration.showNotification(m.title, {
+      body: m.body, icon: "/icons/icon-192.png", badge: "/icons/icon-192.png",
+      tag: m.tag || "fb", dir: "rtl", lang: "ar", data: { url: m.url || "/" },
+    });
+  })());
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if ("focus" in c) { if ("navigate" in c) c.navigate(url).catch(() => {}); return c.focus(); }
+      }
+      return self.clients.openWindow(url);
     })
   );
 });

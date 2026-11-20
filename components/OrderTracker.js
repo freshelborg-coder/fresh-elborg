@@ -2,6 +2,7 @@
 import {STATUSES} from "@/lib/data";
 import {useApp} from "@/lib/store";
 import {PAY} from "@/lib/payments";
+import PushButton from "./PushButton";
 const PTS=[[40,170],[120,110],[230,90],[320,40]];
 export default function OrderTracker(){
   const {t,lang,orders,myOrder}=useApp();
@@ -24,6 +25,7 @@ export default function OrderTracker(){
       <ol className="mt-3 grid grid-cols-4 text-center text-xs font-bold">{STATUSES.map((s,n)=><li key={s} className={n<=i?"text-brand":"text-ink/40"}>{t(s)}</li>)}</ol>
       {o.driver&&<p className="mt-3 text-center text-sm">🛵 {o.driver}</p>}</div>
     {o.synced===false&&<p className="rounded-xl bg-gold/20 p-3 text-center text-sm font-bold">{ar?"الطلب اتسجل على جهازك بس. اضغط الزر تحت علشان توصّله لنا على واتساب.":"Your order is saved on this device only. Tap the button below to send it to us on WhatsApp."}</p>}
+    <PushButton orderId={o.id}/>
     <a href={wa} target="_blank" rel="noopener noreferrer" className="btn block text-center">📲 {ar?"أرسل الطلب على واتساب":"Send the order on WhatsApp"}</a>
   </div>);
 }
